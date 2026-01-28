@@ -16,8 +16,7 @@ int Calculator::subtract(int a, int b) const {
 }
 
 int Calculator::multiply(int a, int b) const {
-    int result = a * b  // INTENTIONAL BUG: Missing semicolon
-    return result;
+    return a * b;
 }
 
 double Calculator::divide(int a, int b) const {

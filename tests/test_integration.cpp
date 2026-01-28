@@ -21,6 +21,7 @@ TEST(IntegrationTest, ConcurrentCalculatorUsage) {
     std::atomic<int> errorCount{0};
     
     auto worker = [&errorCount](int threadId) {
+        (void)threadId;  // Used for thread identification, suppress unused warning
         Calculator calc;
         for (int i = 0; i < ITERATIONS; i++) {
             int result = calc.multiply(5, 6);
@@ -51,10 +52,8 @@ TEST(IntegrationTest, ConcurrentLoggerUsage) {
     // In enterprise: Request handlers, audit logs, error reporting
     const int NUM_THREADS = 10;
     const int LOGS_PER_THREAD = 50;
-    std::set<int> observedCounts;
-    std::mutex countMutex;
     
-    auto worker = [&observedCounts, &countMutex](int threadId) {
+    auto worker = [](int threadId) {
         Logger& logger = Logger::getInstance();
         for (int i = 0; i < LOGS_PER_THREAD; i++) {
             // BUG DETECTION: Each log call increments static counter
@@ -76,6 +75,7 @@ TEST(IntegrationTest, ConcurrentLoggerUsage) {
     // Expected: 500 total calls (10 threads * 50 logs)
     // Actual: Counter shows less due to lost increments
     int expectedTotalCalls = NUM_THREADS * LOGS_PER_THREAD;
+    (void)expectedTotalCalls;  // Used in test description
     
     // This test will fail because the static callCount in Logger::log()
     // is incremented without mutex protection, causing race conditions

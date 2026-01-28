@@ -2,7 +2,7 @@
 #include "Logger.h"
 #include "ConfigManager.h"
 #include "ConnectionPool.h"
-#include "TcpServer.h"
+// #include "TcpServer.h"  // Stub - not needed for minimal build
 #include "DistributedCache.h"
 #include <iostream>
 

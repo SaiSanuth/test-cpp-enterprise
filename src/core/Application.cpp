@@ -11,13 +11,19 @@
 namespace enterprise {
 
 Application::Application(int argc, char** argv) 
-    : initialized_(false)
+    : dbPool_(nullptr)
+    , server_(nullptr)
+    , cache_(nullptr)
+    , initialized_(false)
     , running_(false) {
     parseCommandLine(argc, argv);
 }
 
 Application::~Application() {
     shutdown();
+    delete dbPool_;
+    delete server_;
+    delete cache_;
 }
 
 bool Application::parseCommandLine(int argc, char** argv) {
@@ -84,7 +90,7 @@ bool Application::initializeSubsystems() {
     int maxConn = config.getInt("max_connections", 20);
     
     try {
-        dbPool_ = std::make_unique<database::ConnectionPool>(dbUrl, 5, maxConn);
+        dbPool_ = new database::ConnectionPool(dbUrl, 5, maxConn);
         LOG_INFO("Database connection pool initialized");
     } catch (const std::exception& e) {
         LOG_ERROR("Failed to initialize database: " + std::string(e.what()));
@@ -98,7 +104,7 @@ bool Application::initializeSubsystems() {
     };
     
     try {
-        cache_ = std::make_unique<cache::DistributedCache>(cacheNodes, 10000);
+        cache_ = new cache::DistributedCache(cacheNodes, 10000);
         LOG_INFO("Distributed cache initialized");
     } catch (const std::exception& e) {
         LOG_ERROR("Failed to initialize cache: " + std::string(e.what()));
@@ -108,7 +114,7 @@ bool Application::initializeSubsystems() {
     // Initialize TCP server
     int port = config.getInt("port", 8080);
     try {
-        server_ = std::make_unique<network::TcpServer>(port);
+        server_ = new network::TcpServer(port);
         LOG_INFO("TCP server initialized on port " + std::to_string(port));
     } catch (const std::exception& e) {
         LOG_ERROR("Failed to initialize server: " + std::string(e.what()));
@@ -146,9 +152,12 @@ void Application::shutdown() {
     LOG_INFO("Shutting down application...");
     running_ = false;
     
-    server_.reset();
-    cache_.reset();
-    dbPool_.reset();
+    delete server_;
+    server_ = nullptr;
+    delete cache_;
+    cache_ = nullptr;
+    delete dbPool_;
+    dbPool_ = nullptr;
     
     LOG_INFO("Application shut down complete");
     initialized_ = false;

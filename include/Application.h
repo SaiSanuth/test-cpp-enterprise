@@ -35,9 +35,10 @@ private:
     bool loadConfiguration();
     bool initializeSubsystems();
     
-    std::unique_ptr<database::ConnectionPool> dbPool_;
-    std::unique_ptr<network::TcpServer> server_;
-    std::unique_ptr<cache::DistributedCache> cache_;
+    // Raw pointers for stub implementation (avoids incomplete type issues)
+    database::ConnectionPool* dbPool_;
+    network::TcpServer* server_;
+    cache::DistributedCache* cache_;
     
     bool initialized_;
     bool running_;

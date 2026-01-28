@@ -10,7 +10,7 @@ std::vector<QueryResult> QueryExecutor::executeQuery(const std::string&, const s
 int QueryExecutor::executeUpdate(const std::string&, const std::vector<QueryParam>&) { return 0; }
 bool QueryExecutor::prepare(const std::string& name, const std::string& sql) { preparedStatements_[name] = sql; return true; }
 std::vector<QueryResult> QueryExecutor::executePrepared(const std::string&, const std::vector<QueryParam>&) { return {}; }
-std::unique_ptr<Transaction> QueryExecutor::beginTransaction() { return nullptr; }
+Transaction* QueryExecutor::beginTransaction() { return nullptr; }
 int QueryExecutor::executeBatch(const std::string&, const std::vector<std::vector<QueryParam>>&) { return 0; }
 std::string QueryExecutor::explainQuery(const std::string&) { return "OK"; }
 std::string QueryExecutor::sanitizeParam(const QueryParam&) { return ""; }

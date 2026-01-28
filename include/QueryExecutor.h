@@ -31,8 +31,8 @@ public:
     std::vector<QueryResult> executePrepared(const std::string& name,
                                             const std::vector<QueryParam>& params);
     
-    // Transactions
-    std::unique_ptr<Transaction> beginTransaction();
+    // Transactions (raw pointer to avoid incomplete type issues)
+    Transaction* beginTransaction();
     
     // Batch operations
     int executeBatch(const std::string& sql, 

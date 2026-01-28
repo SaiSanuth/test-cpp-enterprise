@@ -19,8 +19,16 @@ struct CacheNode {
 
 class DistributedCache {
 public:
-    DistributedCache(const std::vector<CacheNode>& nodes, size_t localCacheSize = 1000);
-    ~DistributedCache();
+    DistributedCache(const std::vector<CacheNode>& nodes, size_t localCacheSize = 1000) 
+        : nodes_(nodes) {
+        localCache_ = std::unique_ptr<LRUCache<std::string, std::string>>(
+            new LRUCache<std::string, std::string>(localCacheSize));
+        stats_ = {};
+    }
+    
+    ~DistributedCache() {
+        localCache_.reset();
+    }
     
     // Cache operations
     bool put(const std::string& key, const std::string& value, int ttlSeconds = 0);

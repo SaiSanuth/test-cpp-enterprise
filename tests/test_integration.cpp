@@ -6,30 +6,38 @@
 #include <vector>
 #include <atomic>
 #include <set>
+#include <chrono>
+#include <map>
 
 using namespace enterprise;
 
-// Integration test that simulates real enterprise usage:
-// Multiple threads using shared components concurrently
-// This will expose race conditions that unit tests miss
+// Enterprise Integration Tests - These expose realistic production bugs
+// that pass unit tests but fail under concurrent load
 
-TEST(IntegrationTest, ConcurrentCalculatorUsage) {
-    // Simulate multiple worker threads performing calculations
-    // In enterprise: API handlers, background jobs, event processors
-    const int NUM_THREADS = 10;
-    const int ITERATIONS = 100;
-    std::atomic<int> errorCount{0};
+TEST(IntegrationTest, ConcurrentCalculatorCacheCorruption) {
+    // ENTERPRISE SCENARIO: Multiple API handlers calculating the same values
+    // The shared cache gets corrupted due to missing synchronization
     
-    auto worker = [&errorCount](int threadId) {
-        (void)threadId;  // Used for thread identification, suppress unused warning
+    const int NUM_THREADS = 50;
+    const int ITERATIONS = 1000;
+    std::atomic<int> wrongResults{0};
+    std::atomic<int> totalOps{0};
+    
+    auto worker = [&wrongResults, &totalOps](int threadId) {
         Calculator calc;
         for (int i = 0; i < ITERATIONS; i++) {
+            // All threads multiply the same values
+            // Shared cache should always return 30, but race causes corruption
             int result = calc.multiply(5, 6);
-            // BUG DETECTION: Cache corruption causes wrong results
+            totalOps++;
+            
             if (result != 30) {
-                errorCount++;
+                wrongResults++;
+                // In production: This would corrupt financial calculations,
+                // scientific computations, or business logic results
             }
         }
+        (void)threadId; // Suppress warning
     };
     
     std::vector<std::thread> threads;
@@ -41,11 +49,17 @@ TEST(IntegrationTest, ConcurrentCalculatorUsage) {
         t.join();
     }
     
-    // FAILURE POINT: Race condition in Calculator cache causes errors
-    EXPECT_EQ(errorCount, 0) << "Calculator returned incorrect results " 
-                              << errorCount << " times under concurrent load. "
-                              << "Likely cache corruption due to race condition.";
-}
+    int errors = wrongResults.load();
+    int total = totalOps.load();
+    
+    // CRITICAL FAILURE: Cache corruption in multi-threaded environment
+    EXPECT_EQ(errors, 0) 
+        << "CRITICAL BUG DETECTED: Calculator cache corruption!\n"
+        << "   Wrong results: " << errors << " out of " << total << " operations\n"
+        << "   Error rate: " << (100.0 * errors / total) << "%\n"
+        << "   ROOT CAUSE: Unprotected shared std::map<> in Calculator::multiply()\n"
+        << "   ENTERPRISE IMPACT: Data corruption, wrong financial calculations\n"
+        << "   FIX REQUIRED: Add std::mutex or use thread-local storage";
 
 TEST(IntegrationTest, ConcurrentLoggerUsage) {
     // Simulate multiple threads logging simultaneously
@@ -145,6 +159,42 @@ TEST(IntegrationTest, MultiComponentStressTest) {
         << " calculation errors. This indicates race conditions in Calculator cache. "
         << "Root cause: Shared static cache accessed without synchronization.";
 }
+
+TEST(IntegrationTest, VerifyCacheIntegrityUnderLoad) {
+    // GUARANTEED FAILURE TEST: This WILL expose the race condition
+    // By having many threads hammer the same cache key simultaneously
+    
+    const int NUM_THREADS = 100;
+    const int ITERATIONS = 500;
+    std::atomic<int> wrongResults{0};
+    
+    auto worker = [&wrongResults](int threadId) {
+        Calculator calc;
+        for (int i = 0; i < ITERATIONS; i++) {
+            int result = calc.multiply(5, 6);
+            if (result != 30) {
+                wrongResults++;
+            }
+        }
+        (void)threadId;
+    };
+    
+    std::vector<std::thread> threads;
+    for (int i = 0; i < NUM_THREADS; i++) {
+        threads.emplace_back(worker, i);
+    }
+    
+    for (auto& t : threads) {
+        t.join();
+    }
+    
+    int errors = wrongResults.load();
+    int totalOps = NUM_THREADS * ITERATIONS;
+    
+    // THIS WILL FAIL: Unprotected static map causes cache corruption
+    EXPECT_EQ(errors, 0) 
+        << \"\\n\\n=== CRITICAL ENTERPRISE BUG DETECTED ===\"\n\"
+        << \"\\nRACE CONDITION in Calculator::multiply()\\n\"\n        << \"\\n-------------------------------------------\\n\"\n        << \"  Total operations: \" << totalOps << \"\\n\"\n        << \"  Wrong results: \" << errors << \"\\n\"\n        << \"  Error rate: \" << (100.0 * errors / totalOps) << \"%\\n\"\n        << \"\\n-------------------------------------------\\n\"\n        << \"  ROOT CAUSE:\\n\"\n        << \"    File: src/Calculator.cpp\\n\"\n        << \"    Line: ~15 (static std::map declaration)\\n\"\n        << \"    Issue: Shared cache without mutex protection\\n\"\n        << \"\\n\"\n        << \"    static std::map<std::string, int> resultCache; // RACE!\\n\"\n        << \"    resultCache[key.str()] = result;  // Unprotected write\\n\"\n        << \"\\n-------------------------------------------\\n\"\n        << \"  LIKELY COMMIT:\\n\"\n        << \"    Recent commit adding result caching\\n\"\n        << \"    Changed files: Calculator.cpp\\n\"\n        << \"\\n-------------------------------------------\\n\"\n        << \"  ENTERPRISE IMPACT:\\n\"\n        << \"    ✗ Financial calculations corrupted\\n\"\n        << \"    ✗ Data integrity violations\\n\"\n        << \"    ✗ Non-deterministic failures\\n\"\n        << \"    ✗ Production incidents\\n\"\n        << \"\\n-------------------------------------------\\n\"\n        << \"  RECOMMENDED FIX:\\n\"\n        << \"    Option 1: Add mutex\\n\"\n        << \"      static std::mutex cacheMutex;\\n\"\n        << \"      std::lock_guard<std::mutex> lock(cacheMutex);\\n\"\n        << \"\\n\"\n        << \"    Option 2: Use thread-local storage\\n\"\n        << \"      thread_local std::map<std::string, int> cache;\\n\"\n        << \"\\n\"\n        << \"    Option 3: Remove caching (simplest)\\n\"\n        << \"      return a * b;  // Direct calculation\\n\"\n        << \"\\n==========================================\\n\";\n}
 
 // This test simulates what happens in enterprise CI/CD:
 // - Local developer runs: Single-threaded unit tests pass ✓

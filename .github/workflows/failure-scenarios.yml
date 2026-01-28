@@ -1,0 +1,99 @@
+# Workflow with intentional failures for testing triage AI
+
+name: Failure Scenarios
+
+on:
+  push:
+    branches: [ test-failures ]
+  workflow_dispatch:
+    inputs:
+      failure_type:
+        description: 'Type of failure to simulate'
+        required: true
+        type: choice
+        options:
+          - code_error
+          - infra_timeout
+          - cache_corruption
+          - dependency_missing
+
+jobs:
+  code-error-scenario:
+    name: Simulate Code Error
+    runs-on: ubuntu-latest
+    if: github.event.inputs.failure_type == 'code_error' || github.ref == 'refs/heads/test-failures'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Introduce null pointer bug
+      run: |
+        cat > src/bug.cpp << 'EOF'
+        #include <iostream>
+        int main() {
+            int* ptr = nullptr;
+            *ptr = 42;  // NULL POINTER DEREFERENCE
+            return 0;
+        }
+        EOF
+        
+    - name: Try to build (will fail)
+      run: |
+        g++ -o bug src/bug.cpp
+        ./bug
+
+  infra-timeout-scenario:
+    name: Simulate Infrastructure Timeout
+    runs-on: ubuntu-latest
+    if: github.event.inputs.failure_type == 'infra_timeout'
+    timeout-minutes: 1
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Simulate long running process
+      run: |
+        echo "Starting process that will timeout..."
+        sleep 120  # Will timeout after 1 minute
+
+  cache-corruption-scenario:
+    name: Simulate Cache Corruption
+    runs-on: ubuntu-latest
+    if: github.event.inputs.failure_type == 'cache_corruption'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup cache
+      uses: actions/cache@v4
+      with:
+        path: build
+        key: corrupted-cache-${{ runner.os }}
+        
+    - name: Corrupt cache
+      run: |
+        echo "garbage data" > build/corrupted.dat
+        
+    - name: Try to use corrupted cache
+      run: |
+        cmake -B build
+        cmake --build build  # Will fail due to corrupted state
+
+  dependency-missing-scenario:
+    name: Simulate Missing Dependency
+    runs-on: ubuntu-latest
+    if: github.event.inputs.failure_type == 'dependency_missing'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Skip dependency installation
+      run: echo "Not installing CMake"
+      
+    - name: Try to build without CMake
+      run: |
+        cmake -B build  # Will fail - cmake not found

@@ -4,6 +4,8 @@
 #include <vector>
 #include <memory>
 #include <chrono>
+#include <optional>
+#include <map>
 
 namespace enterprise {
 namespace cache {

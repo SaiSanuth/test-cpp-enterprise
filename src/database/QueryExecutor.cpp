@@ -1,6 +1,7 @@
 ﻿// Stub implementations for remaining files
-#include ""QueryExecutor.h""
-#include ""Logger.h""
+#include "QueryExecutor.h"
+#include "Logger.h"
+
 namespace enterprise { namespace database {
 QueryExecutor::QueryExecutor(std::shared_ptr<Connection> conn) : connection_(conn) {}
 QueryExecutor::~QueryExecutor() {}

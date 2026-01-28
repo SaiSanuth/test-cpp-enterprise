@@ -44,7 +44,7 @@ if(BUILD_TESTS)
     )
     FetchContent_MakeAvailable(googletest)
     
-    # Test files
+    # Unit test files
     set(TEST_SOURCES
         tests/test_calculator.cpp
         tests/test_string_helper.cpp
@@ -56,6 +56,18 @@ if(BUILD_TESTS)
     add_executable(unit_tests ${TEST_SOURCES})
     target_link_libraries(unit_tests PRIVATE GTest::gtest_main Threads::Threads)
     
+    # Integration test files (catches enterprise-level bugs)
+    set(INTEGRATION_TEST_SOURCES
+        tests/test_integration.cpp
+        src/Calculator.cpp
+        src/StringHelper.cpp
+        src/Logger.cpp
+    )
+    
+    add_executable(integration_tests ${INTEGRATION_TEST_SOURCES})
+    target_link_libraries(integration_tests PRIVATE GTest::gtest_main Threads::Threads)
+    
     include(GoogleTest)
     gtest_discover_tests(unit_tests)
+    gtest_discover_tests(integration_tests)
 endif()

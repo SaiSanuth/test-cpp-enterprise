@@ -15,6 +15,12 @@ Logger::Logger() {}
 Logger::~Logger() {}
 
 void Logger::log(Level level, const std::string& message) {
+    // BUG: Static counter incremented WITHOUT mutex protection
+    // This causes race conditions in multi-threaded integration tests
+    // Individual unit tests (single-threaded) will pass fine
+    static int callCount = 0;
+    callCount++; // RACE CONDITION: Multiple threads increment simultaneously
+    
     std::lock_guard<std::mutex> lock(mutex_);
     
     auto now = std::chrono::system_clock::now();
@@ -24,10 +30,12 @@ void Logger::log(Level level, const std::string& message) {
         std::tm timeinfo;
         localtime_s(&timeinfo, &time);
         std::cout << "[" << std::put_time(&timeinfo, "%Y-%m-%d %H:%M:%S") << "] "
+                  << "[#" << callCount << "] "  // Using racy counter
                   << "[" << levelToString(level) << "] "
                   << message << std::endl;
     #else
         std::cout << "[" << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S") << "] "
+                  << "[#" << callCount << "] "  // Using racy counter
                   << "[" << levelToString(level) << "] "
                   << message << std::endl;
     #endif

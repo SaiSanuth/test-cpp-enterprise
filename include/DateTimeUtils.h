@@ -11,7 +11,7 @@ public:
 
 class CryptoUtils {
 public:
-    static std::string hash(const std::string& data);
+    static std::string hash(const std::string&);
 };
 
 } // namespace utils

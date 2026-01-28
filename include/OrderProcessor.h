@@ -5,17 +5,17 @@ namespace business {
 
 class OrderProcessor {
 public:
-    static bool processOrder(int orderId);
+    static bool processOrder(int);
 };
 
 class PaymentGateway {
 public:
-    static bool charge(double amount);
+    static bool charge(double);
 };
 
 class InventoryManager {
 public:
-    static int getStock(int productId);
+    static int getStock(int);
 };
 
 } // namespace business

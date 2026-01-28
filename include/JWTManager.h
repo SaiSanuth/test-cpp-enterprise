@@ -6,13 +6,13 @@ namespace auth {
 
 class JWTManager {
 public:
-    static std::string generate(const std::string& payload);
-    static bool verify(const std::string& token);
+    static std::string generate(const std::string&);
+    static bool verify(const std::string&);
 };
 
 class PasswordHasher {
 public:
-    static std::string hash(const std::string& password);
+    static std::string hash(const std::string&);
 };
 
 class SessionManager {

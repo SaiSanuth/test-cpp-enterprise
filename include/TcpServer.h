@@ -1,17 +1,18 @@
 #pragma once
+#include <string>
 
 namespace enterprise {
 namespace network {
 
 class TcpServer {
 public:
-    TcpServer(int port) {}
+    TcpServer(int) {}  // Unnamed parameter to avoid unused warning
     ~TcpServer() = default;
 };
 
 class HttpClient {
 public:
-    static std::string get(const std::string& url) { return ""; }
+    static std::string get(const std::string&) { return ""; }  // Unnamed parameter
 };
 
 class WebSocketHandler {

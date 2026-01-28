@@ -193,8 +193,22 @@ TEST(IntegrationTest, VerifyCacheIntegrityUnderLoad) {
     
     // THIS WILL FAIL: Unprotected static map causes cache corruption
     EXPECT_EQ(errors, 0) 
-        << \"\\n\\n=== CRITICAL ENTERPRISE BUG DETECTED ===\"\n\"
-        << \"\\nRACE CONDITION in Calculator::multiply()\\n\"\n        << \"\\n-------------------------------------------\\n\"\n        << \"  Total operations: \" << totalOps << \"\\n\"\n        << \"  Wrong results: \" << errors << \"\\n\"\n        << \"  Error rate: \" << (100.0 * errors / totalOps) << \"%\\n\"\n        << \"\\n-------------------------------------------\\n\"\n        << \"  ROOT CAUSE:\\n\"\n        << \"    File: src/Calculator.cpp\\n\"\n        << \"    Line: ~15 (static std::map declaration)\\n\"\n        << \"    Issue: Shared cache without mutex protection\\n\"\n        << \"\\n\"\n        << \"    static std::map<std::string, int> resultCache; // RACE!\\n\"\n        << \"    resultCache[key.str()] = result;  // Unprotected write\\n\"\n        << \"\\n-------------------------------------------\\n\"\n        << \"  LIKELY COMMIT:\\n\"\n        << \"    Recent commit adding result caching\\n\"\n        << \"    Changed files: Calculator.cpp\\n\"\n        << \"\\n-------------------------------------------\\n\"\n        << \"  ENTERPRISE IMPACT:\\n\"\n        << \"    ✗ Financial calculations corrupted\\n\"\n        << \"    ✗ Data integrity violations\\n\"\n        << \"    ✗ Non-deterministic failures\\n\"\n        << \"    ✗ Production incidents\\n\"\n        << \"\\n-------------------------------------------\\n\"\n        << \"  RECOMMENDED FIX:\\n\"\n        << \"    Option 1: Add mutex\\n\"\n        << \"      static std::mutex cacheMutex;\\n\"\n        << \"      std::lock_guard<std::mutex> lock(cacheMutex);\\n\"\n        << \"\\n\"\n        << \"    Option 2: Use thread-local storage\\n\"\n        << \"      thread_local std::map<std::string, int> cache;\\n\"\n        << \"\\n\"\n        << \"    Option 3: Remove caching (simplest)\\n\"\n        << \"      return a * b;  // Direct calculation\\n\"\n        << \"\\n==========================================\\n\";\n}
+        << "\\n=== CRITICAL BUG: RACE CONDITION DETECTED ===\\n"
+        << "Test: VerifyCacheIntegrityUnderLoad\\n"
+        << "Total operations: " << totalOps << "\\n"
+        << "Wrong results: " << errors << "\\n"
+        << "Error rate: " << (100.0 * errors / totalOps) << "%\\n"
+        << "\\nROOT CAUSE: Unprotected static cache in Calculator::multiply()\\n"
+        << "FILE: src/Calculator.cpp (line ~15)\\n"
+        << "ISSUE: static std::map without mutex protection\\n"
+        << "\\nENTERPRISE IMPACT:\\n"
+        << "  - Financial calculations corrupted\\n"
+        << "  - Multi-threaded API failures\\n"
+        << "  - Production data integrity violations\\n"
+        << "\\nRECOMMENDED FIX:\\n"
+        << "  1. Add static std::mutex cacheMutex\\n"
+        << "  2. Lock before all cache operations\\n"
+        << "  3. OR remove caching entirely\\n";\n}
 
 // This test simulates what happens in enterprise CI/CD:
 // - Local developer runs: Single-threaded unit tests pass ✓

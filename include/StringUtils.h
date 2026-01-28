@@ -4,6 +4,7 @@
 #include <sstream>
 #include <algorithm>
 #include <cctype>
+#include <cstdint>
 
 namespace enterprise {
 namespace utils {

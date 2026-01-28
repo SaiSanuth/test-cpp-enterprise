@@ -35,20 +35,8 @@ set(SOURCES
     src/database/ConnectionPool.cpp
     src/database/QueryExecutor.cpp
     src/database/Transaction.cpp
-    src/network/HttpClient.cpp
-    src/network/TcpServer.cpp
-    src/network/WebSocketHandler.cpp
     src/cache/LRUCache.cpp
-    src/cache/DistributedCache.cpp
-    src/auth/JWTManager.cpp
-    src/auth/PasswordHasher.cpp
-    src/auth/SessionManager.cpp
     src/utils/StringUtils.cpp
-    src/utils/DateTimeUtils.cpp
-    src/utils/CryptoUtils.cpp
-    src/business/OrderProcessor.cpp
-    src/business/PaymentGateway.cpp
-    src/business/InventoryManager.cpp
 )
 
 # Create executable
@@ -82,11 +70,7 @@ if(BUILD_TESTS)
         src/core/Logger.cpp
         src/database/ConnectionPool.cpp
         src/cache/LRUCache.cpp
-        src/auth/JWTManager.cpp
         src/utils/StringUtils.cpp
-        src/business/OrderProcessor.cpp
-        src/utils/DateTimeUtils.cpp
-        src/utils/CryptoUtils.cpp
     )
     
     target_link_libraries(unit_tests PRIVATE 

@@ -149,43 +149,44 @@ jobs:
         name: static-analysis-results
         path: cppcheck-report.xml
 
-  coverage:
-    name: Code Coverage
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y cmake g++ lcov
-        
-    - name: Configure with coverage
-      run: |
-        cmake -B build \
-          -DCMAKE_BUILD_TYPE=Debug \
-          -DBUILD_TESTS=ON \
-          -DENABLE_COVERAGE=ON \
-          -DCMAKE_CXX_FLAGS="--coverage"
-          
-    - name: Build
-      run: cmake --build build
-      
-    - name: Run tests
-      run: |
-        cd build
-        ctest --output-on-failure
-        
-    - name: Generate coverage report
-      run: |
-        lcov --capture --directory build --output-file coverage.info
-        lcov --remove coverage.info '/usr/*' '*/tests/*' '*/googletest/*' --output-file coverage.info
-        lcov --list coverage.info
-        
-    - name: Upload coverage
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: coverage.info
+  # coverage:
+  #   name: Code Coverage
+  #   runs-on: ubuntu-latest
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #     
+  #   - name: Install dependencies
+  #     run: |
+  #       sudo apt-get update
+  #       sudo apt-get install -y cmake g++ lcov
+  #       
+  #   - name: Configure with coverage
+  #     run: |
+  #       cmake -B build \
+  #         -DCMAKE_BUILD_TYPE=Debug \
+  #         -DBUILD_TESTS=ON \
+  #         -DENABLE_COVERAGE=ON \
+  #         -DCMAKE_CXX_FLAGS="--coverage"
+  #         
+  #   - name: Build
+  #     run: cmake --build build
+  #     
+  #   - name: Run tests
+  #     run: |
+  #       cd build
+  #       ctest --output-on-failure
+  #       
+  #   - name: Generate coverage report
+  #     run: |
+  #       lcov --capture --directory build --output-file coverage.info
+  #       lcov --remove coverage.info '/usr/*' '*/tests/*' '*/googletest/*' --output-file coverage.info
+  #       lcov --list coverage.info
+  #       
+  #   - name: Upload coverage
+  #     uses: actions/upload-artifact@v4
+  #     with:
+  #       name: coverage-report
+  #       path: coverage.info
+

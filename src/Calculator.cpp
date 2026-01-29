@@ -4,27 +4,55 @@
 
 namespace enterprise {
 
-Calculator::Calculator() {}
+Calculator::Calculator() : cacheEnabled(false), lastResult(0) {}
 Calculator::~Calculator() {}
 
+void Calculator::enableCache(bool enable) {
+    cacheEnabled = enable;
+}
+
+void Calculator::clearCache() {
+    lastResult = 0;
+}
+
+int Calculator::getLastResult() const {
+    return lastResult;
+}
+
 int Calculator::add(int a, int b) const {
-    return a + b;
+    int result = a + b;
+    // BUG: Updates lastResult even when cache disabled
+    // This causes interdependency - other methods rely on lastResult
+    lastResult = result;
+    return result;
 }
 
 int Calculator::subtract(int a, int b) const {
-    return a - b;
+    int result = a - b;
+    if (cacheEnabled) {
+        lastResult = result;
+    }
+    return result;
 }
 
 int Calculator::multiply(int a, int b) const {
-    // Fixed: Simply return the correct product (positive or negative)
-    return a * b;
+    int result = a * b;
+    if (cacheEnabled) {
+        lastResult = result;
+    }
+    return result;
 }
 
 double Calculator::divide(int a, int b) const {
     if (b == 0) {
         throw std::invalid_argument("Division by zero");
     }
-    return static_cast<double>(a) / b;
+    double result = static_cast<double>(a) / b;
+    // BUG: Stores double as int, loses precision
+    if (cacheEnabled) {
+        lastResult = static_cast<int>(result);
+    }
+    return result;
 }
 
 bool Calculator::isPrime(int n) const {
@@ -45,9 +73,15 @@ int Calculator::factorial(int n) const {
     }
     if (n == 0 || n == 1) return 1;
     
-    int result = 1;
+    // BUG: Uses lastResult from previous operation as starting point
+    // When cache enabled, factorial depends on previous calculation!
+    int result = cacheEnabled ? lastResult : 1;
     for (int i = 2; i <= n; i++) {
         result *= i;
+    }
+    
+    if (cacheEnabled) {
+        lastResult = result;
     }
     return result;
 }

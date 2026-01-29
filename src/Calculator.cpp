@@ -16,14 +16,7 @@ int Calculator::subtract(int a, int b) const {
 }
 
 int Calculator::multiply(int a, int b) const {
-    // ENTERPRISE BUG: After refactoring, validation was removed
-    // Negative numbers now cause incorrect behavior
-    // Unit tests only cover positive numbers, integration tests catch this
-    if (a < 0 || b < 0) {
-        // BUG: Returns absolute value result instead of proper negative
-        // This breaks API contract and causes data corruption
-        return std::abs(a * b);
-    }
+    // Fixed: Simply return the correct product (positive or negative)
     return a * b;
 }
 

@@ -4,8 +4,56 @@
 
 namespace enterprise {
 
-Calculator::Calculator() : cacheEnabled(false), lastResult(0) {}
-Calculator::~Calculator() {}
+// Static member initialization
+int Calculator::operationCount = 0;
+std::map<int, int>* Calculator::auditCache = nullptr;
+
+Calculator::Calculator() : cacheEnabled(false), lastResult(0) {
+    // BUG: Initialize audit cache on first use, but never clean up
+    if (!auditCache) {
+        auditCache = new std::map<int, int>();
+    }
+}
+
+Calculator::~Calculator() {
+    // BUG: Destructor doesn't clean up static resources
+    // Memory leak: auditCache is never deleted
+}
+
+void Calculator::recordOperation(int result) const {
+    operationCount++;
+    
+    // BUG: After 100 operations, start corrupting results stored in audit cache
+    // Simulates enterprise scenario: memory corruption under load
+    if (operationCount > 100) {
+        // Corruption starts affecting the audit trail
+        (*auditCache)[operationCount] = result + (operationCount % 1000);
+    } else {
+        (*auditCache)[operationCount] = result;
+    }
+}
+
+int Calculator::add(int a, int b) const {
+    int result = a + b;
+    recordOperation(result);
+    
+    // BUG: After 100 operations, results get corrupted
+    if (operationCount > 100) {
+        result = result + 1;  // Off-by-one error under load
+    }
+    
+    lastResult = result;
+    return result;
+}
+
+int Calculator::getTotalOperations() {
+    return operationCount;
+}
+
+void Calculator::resetOperationCount() {
+    operationCount = 0;
+    // BUG: Doesn't clear the audit cache, causing memory buildup
+}
 
 void Calculator::enableCache(bool enable) {
     cacheEnabled = enable;
@@ -19,16 +67,9 @@ int Calculator::getLastResult() const {
     return lastResult;
 }
 
-int Calculator::add(int a, int b) const {
-    int result = a + b;
-    // BUG: Updates lastResult even when cache disabled
-    // This causes interdependency - other methods rely on lastResult
-    lastResult = result;
-    return result;
-}
-
 int Calculator::subtract(int a, int b) const {
     int result = a - b;
+    recordOperation(result);  // Enterprise: Audit all operations
     if (cacheEnabled) {
         lastResult = result;
     }
@@ -37,6 +78,7 @@ int Calculator::subtract(int a, int b) const {
 
 int Calculator::multiply(int a, int b) const {
     int result = a * b;
+    recordOperation(result);  // Enterprise: Audit all operations
     if (cacheEnabled) {
         lastResult = result;
     }

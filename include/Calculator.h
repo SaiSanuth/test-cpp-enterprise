@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <map>
 
 namespace enterprise {
 
@@ -22,9 +23,19 @@ public:
     void clearCache();
     int getLastResult() const;
     
+    // Enterprise: Operation auditing for compliance
+    static int getTotalOperations();
+    static void resetOperationCount();
+    
 private:
     mutable bool cacheEnabled;
     mutable int lastResult;
+    
+    // Enterprise: Track operations for auditing (BUG: Resource leak)
+    static int operationCount;
+    static std::map<int, int>* auditCache;  // Raw pointer never freed
+    
+    void recordOperation(int result) const;
 };
 
 } // namespace enterprise

@@ -105,3 +105,31 @@ TEST(IntegrationTest, MultipleOperationsWithCache) {
         << "Expected: 24, Got: " << d << "\n";
 }
 
+TEST(IntegrationTest, EnterpriseResourceExhaustion) {
+    // ENTERPRISE BUG: Simulates high-load production scenario
+    // After 100+ operations, system starts failing due to resource corruption
+    Calculator calc1, calc2;
+    
+    // Simulate production load: 110 operations across multiple instances
+    for (int i = 0; i < 55; i++) {
+        calc1.add(i, i + 1);
+        calc2.multiply(i, 2);
+    }
+    
+    // After corruption threshold, operations return wrong results
+    int result = calc1.add(100, 200);
+    EXPECT_EQ(result, 300)
+        << "\n=== RESOURCE CORRUPTION BUG ===\n"
+        << "After 110 operations, Calculator returns wrong results\n"
+        << "Expected: 300, Got: " << result << "\n"
+        << "Root cause: Static operation counter causes corruption after threshold\n"
+        << "Impact: Production systems fail under load after ~100 operations\n"
+        << "File: src/Calculator.cpp - add() method checks operationCount\n"
+        << "Bug: if (operationCount > 100) { result = result + 1; }\n";
+        
+    // Verify total operations tracked
+    int totalOps = Calculator::getTotalOperations();
+    EXPECT_GT(totalOps, 100)
+        << "Operation counting not working correctly";
+}
+

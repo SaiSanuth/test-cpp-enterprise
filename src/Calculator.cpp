@@ -73,13 +73,14 @@ int Calculator::factorial(int n) const {
     }
     if (n == 0 || n == 1) return 1;
     
-    // BUG: Uses lastResult from previous operation as starting point
-    // When cache enabled, factorial depends on previous calculation!
-    int result = cacheEnabled ? lastResult : 1;
+    // FIX: Always start from 1, regardless of cache state
+    // Cache is only for storing the final result, not for calculation
+    int result = 1;
     for (int i = 2; i <= n; i++) {
         result *= i;
     }
     
+    // Update cache with the correctly calculated result
     if (cacheEnabled) {
         lastResult = result;
     }

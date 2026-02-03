@@ -93,14 +93,15 @@ TEST(IntegrationTest, MultipleOperationsWithCache) {
     calc.enableCache(true);
     
     // Operation sequence matters!
-    int a = calc.add(100, 50);       // lastResult = 150
-    int b = calc.subtract(200, 100); // lastResult = 100  
-    int c = calc.multiply(5, 5);     // lastResult = 25
-    int d = calc.factorial(4);       // BUG: starts from 25, not 1!
+    calc.add(100, 50);       // lastResult = 150
+    calc.subtract(200, 100); // lastResult = 100  
+    calc.multiply(5, 5);     // lastResult = 25
+    int d = calc.factorial(4);       // Should be 24, not affected by lastResult!
     
-    // factorial(4) should be 24, not 25*2*3*4 = 600
+    // factorial(4) should be 24
     EXPECT_EQ(d, 24)
         << "\n=== CASCADING FAILURE ===\n"
         << "After multiple cached operations, factorial gives wrong result\n"
         << "Expected: 24, Got: " << d << "\n";
 }
+
